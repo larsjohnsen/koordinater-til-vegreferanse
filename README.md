@@ -1,26 +1,50 @@
 # Koordinater til Vegreferanse
 
-A Go application that reads UTM33 coordinates from tabulated files, converts them to Norwegian road references (vegreferanse) using the Norwegian Public Roads Administration (NVDB) API v4, and appends the results in a new column labeled `Vegreferanse`.
+A Go application that provides bidirectional conversion between UTM33 coordinates and Norwegian road references (vegreferanse) using the Norwegian Public Roads Administration (NVDB) API v4.
 
 ## Features
 
-- Intelligently maintains travel continuity when multiple road matches are available.
+- Bidirectional conversion between UTM33 coordinates and vegreferanse:
+  - Convert UTM33 coordinates to vegreferanse
+  - Convert vegreferanse to UTM33 coordinates
+- Handles rate limiting and efficient caching to reduce API calls
+- Supports multiple concurrent workers for high-performance processing
+- Intelligently maintains travel continuity when multiple road matches are available
+- Provides a summary of road numbers with their corresponding row ranges in the input file
 
 ## Usage
 
+The Go runtime, at least version 1.24, must be installed and available in $PATH.
+
 ```bash
-# Basic usage with default settings
-go run .
+# Convert coordinates to vegreferanse (coord_to_vegref mode)
+go run . -mode=coord_to_vegref -input=input/data.txt -output=output/result.txt -x-column=2 -y-column=3
 
-# With custom settings
-go run . -cache-dir=./my_cache -radius=15 -rate-limit=40 -workers=10
+# Convert vegreferanse to coordinates (vegref_to_coord mode)
+go run . -mode=vegref_to_coord -input=input/vegrefs.txt -output=output/coords.txt -vegreferanse-column=6
 
-# Process a specific file with custom coordinate columns
-go run . -input=data/myfile.txt -output=results/output.txt -x-column=2 -y-column=3
+# With additional settings
+go run . -mode=coord_to_vegref -input=data/myfile.txt -output=results/output.txt -x-column=2 -y-column=3 \
+  -cache-dir=./my_cache -radius=15 -rate-limit=40 -workers=10
 ```
 
 ### Command-line flags
 
+#### Common flags (required)
+| Flag     | Description                                  |
+|----------|----------------------------------------------|
+| -mode    | **Required**. Conversion mode: coord_to_vegref or vegref_to_coord |
+| -input   | **Required**. Input file path                |
+| -output  | **Required**. Output file path               |
+
+#### Mode-specific flags
+| Flag                  | Mode           | Description                                  |
+|-----------------------|----------------|----------------------------------------------|
+| -x-column             | coord_to_vegref| **Required**. 0-based index of the column containing X coordinates |
+| -y-column             | coord_to_vegref| **Required**. 0-based index of the column containing Y coordinates |
+| -vegreferanse-column  | vegref_to_coord| **Required**. 0-based index of the column containing vegreferanse |
+
+#### Optional flags
 | Flag           | Default               | Description                                  |
 |----------------|----------------------|----------------------------------------------|
 | -no-cache      | false                | Disable disk cache                           |
@@ -30,12 +54,13 @@ go run . -input=data/myfile.txt -output=results/output.txt -x-column=2 -y-column
 | -rate-limit    | 40                   | Number of API calls allowed per time frame   |
 | -rate-time     | 1000                 | Rate limit time frame in milliseconds        |
 | -workers       | 5                    | Number of concurrent workers                 |
-| -input         | input/7834.txt       | Input file path                              |
-| -output        | output/7834_with_vegreferanse.txt | Output file path                |
-| -x-column      | 4                    | 0-based index of the column containing X coordinates |
-| -y-column      | 5                    | 0-based index of the column containing Y coordinates |
 
 ## Input/Output Format
 
+### Coordinates to Vegreferanse Mode (coord_to_vegref)
 - **Input**: Tab-delimited file with a header row and X/Y coordinates in UTM33 format
 - **Output**: Same as input with an additional column for vegreferanse
+
+### Vegreferanse to Coordinates Mode (vegref_to_coord)
+- **Input**: Tab-delimited file with a header row and a vegreferanse column
+- **Output**: Same as input with two additional columns for X and Y coordinates in UTM33 format
