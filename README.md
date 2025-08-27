@@ -14,7 +14,7 @@ A Go application that provides bidirectional conversion between UTM33 coordinate
 
 ## Usage
 
-The Go runtime, at least version 1.24, must be installed and available in $PATH.
+The Go runtime, at least version 1.25, must be installed and available in $PATH.
 
 ```bash
 # Convert coordinates to vegreferanse (coord_to_vegref mode)
@@ -25,7 +25,7 @@ go run . -mode=vegref_to_coord -input=input/vegrefs.txt -output=output/coords.tx
 
 # With additional settings
 go run . -mode=coord_to_vegref -input=data/myfile.txt -output=results/output.txt -x-column=2 -y-column=3 \
-  -cache-dir=./my_cache -rate-limit=40 -workers=10
+  -cache-dir=./my_cache -rate-limit=40 -workers=10 -max-distance=15
 ```
 
 ### Command-line flags
@@ -50,6 +50,7 @@ go run . -mode=coord_to_vegref -input=data/myfile.txt -output=results/output.txt
 | -no-cache      | false                | Disable disk cache                           |
 | -cache-dir     | cache/api_responses  | Directory for disk cache                     |
 | -clear-cache   | false                | Clear existing cache before starting         |
+| -max-distance  | 10                   | Maximum distance in meters for filtering API results |
 | -rate-limit    | 40                   | Number of API calls allowed per time frame   |
 | -rate-time     | 1000                 | Rate limit time frame in milliseconds        |
 | -workers       | 5                    | Number of concurrent workers                 |

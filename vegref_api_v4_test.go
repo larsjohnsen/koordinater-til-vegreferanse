@@ -494,6 +494,64 @@ func calculateDistance(x1, y1, x2, y2 float64) float64 {
 	return math.Sqrt(dx*dx + dy*dy)
 }
 
+// TestMaxDistanceFiltering tests that the max distance filtering works correctly
+func TestMaxDistanceFiltering(t *testing.T) {
+	if testing.Short() {
+		t.Skip("Skipping max distance filtering test in short mode")
+	}
+
+	// Create API client (no distance filtering at API level now)
+	api := NewVegvesenetAPIV4(10, time.Second, "")
+
+	// Use coordinates that should return multiple matches with varying distances
+	x := 253671.97
+	y := 6648897.78
+
+	// Get all matches from API (unfiltered)
+	allMatches, err := api.GetVegreferanseMatches(x, y)
+	if err != nil {
+		t.Fatalf("Error getting matches: %v", err)
+	}
+
+	// Test with different max distance settings
+	testCases := []struct {
+		maxDistance     int
+		expectFiltering bool
+		description     string
+	}{
+		{10, true, "Very restrictive distance (10m) - should filter out most results"},
+		{100, true, "Moderately restrictive distance (100m) - should filter some results"},
+		{1000, false, "Default distance (1000m) - should not filter many results"},
+		{10000, false, "Very permissive distance (10000m) - should not filter any results"},
+	}
+
+	for _, tc := range testCases {
+		t.Run(tc.description, func(t *testing.T) {
+			// Apply client-side filtering using production function
+			filteredMatches := filterMatchesByDistance(allMatches, tc.maxDistance)
+
+			// Log the number of matches and their distances
+			t.Logf("Max distance %dm: Found %d matches (from %d total)",
+				tc.maxDistance, len(filteredMatches), len(allMatches))
+			for i, match := range filteredMatches {
+				t.Logf("  Match %d: %s (distance: %.2f meters)",
+					i+1, match.Vegsystemreferanse.Kortform, match.Avstand)
+
+				// Verify that all returned matches respect the max distance filter
+				if match.Avstand > float64(tc.maxDistance) {
+					t.Errorf("Match %d has distance %.2f meters, which exceeds max distance %d meters",
+						i+1, match.Avstand, tc.maxDistance)
+				}
+			}
+
+			// Verify filtering behavior
+			if tc.expectFiltering && len(filteredMatches) >= len(allMatches) {
+				t.Logf("Note: Expected filtering but got same number of results. This might be okay if all matches are within the distance threshold.")
+			}
+		})
+	}
+}
+
 // TestWKTFormatCorrespondsToUTM33 verifies that the WKT format returned by the API
 // corresponds to the UTM33 (EPSG:5973) coordinate system
 func TestWKTFormatCorrespondsToUTM33(t *testing.T) {

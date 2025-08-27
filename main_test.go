@@ -42,6 +42,8 @@ func TestProcessFile(t *testing.T) {
 			XColumn: 4,
 			YColumn: 5,
 		},
+		MaxDistance: 1000, // Default distance filter
+		Workers:     1,    // Sequential processing for testing
 	})
 	if err != nil {
 		t.Fatalf("Failed to process file: %v", err)

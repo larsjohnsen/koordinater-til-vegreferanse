@@ -51,6 +51,7 @@ type Config struct {
 	// API settings
 	RateLimit     int `validate:"min=1,max=1000"`
 	RateLimitTime int `validate:"min=1,max=10000"`
+	MaxDistance   int `validate:"min=1,max=10000"` // Maximum distance in meters for filtering results
 
 	// Processing settings
 	Workers int `validate:"min=1,max=100"`
@@ -227,6 +228,7 @@ func parseConfig() (Config, error) {
 	flag.BoolVar(&config.ClearCache, "clear-cache", false, "Clear existing cache before starting")
 	flag.IntVar(&config.RateLimit, "rate-limit", 40, "Number of API calls allowed per time frame (NVDB default: 40)")
 	flag.IntVar(&config.RateLimitTime, "rate-time", 1000, "Rate limit time frame in milliseconds (NVDB default: 1000)")
+	flag.IntVar(&config.MaxDistance, "max-distance", 10, "Maximum distance in meters for filtering API results")
 	flag.IntVar(&config.Workers, "workers", 5, "Number of concurrent workers")
 
 	// Mode-specific flags - use temporary variables
@@ -392,7 +394,7 @@ func readInputFile(inputPath string, config Config) (string, []string, error) {
 }
 
 // processCoordinatesToVegreferanse processes the input file to convert coordinates to vegreferanse
-func processCoordinatesToVegreferanse(lines []string, provider VegreferanseProvider, workers int, modeConfig CoordToVegrefConfig) ([]processResult, error) {
+func processCoordinatesToVegreferanse(lines []string, provider VegreferanseProvider, workers int, modeConfig CoordToVegrefConfig, maxDistance int) ([]processResult, error) {
 	// Create a channel for tasks and results with buffering
 	taskChannel := make(chan processTask, len(lines))
 	resultChannel := make(chan processResult, len(lines))
@@ -452,18 +454,21 @@ func processCoordinatesToVegreferanse(lines []string, provider VegreferanseProvi
 					continue
 				}
 
-				// Default to empty string if no matches were found
+				// Filter matches by distance if specified
+				filteredMatches := filterMatchesByDistance(matches, maxDistance)
+
+				// Default to empty string if no matches were found after filtering
 				vegreferanse := ""
-				if len(matches) > 0 {
+				if len(filteredMatches) > 0 {
 					// Get the first match by default - the selector will improve this
-					vegreferanse = matches[0].Vegsystemreferanse.Kortform
+					vegreferanse = filteredMatches[0].Vegsystemreferanse.Kortform
 				}
 
 				resultChannel <- processResult{
 					lineIdx:      lineIdx,
 					line:         line,
 					vegreferanse: vegreferanse,
-					matches:      matches,
+					matches:      filteredMatches, // Store filtered matches for the selector
 				}
 			}
 		}()
@@ -586,6 +591,21 @@ func processVegreferanseToCoordinates(lines []string, provider CoordinateProvide
 	})
 
 	return results, nil
+}
+
+// filterMatchesByDistance filters vegreferanse matches by maximum distance
+func filterMatchesByDistance(matches []VegreferanseMatch, maxDistance int) []VegreferanseMatch {
+	if maxDistance <= 0 {
+		return matches // No filtering if maxDistance is not positive
+	}
+
+	filtered := make([]VegreferanseMatch, 0, len(matches))
+	for _, match := range matches {
+		if match.Avstand <= float64(maxDistance) {
+			filtered = append(filtered, match)
+		}
+	}
+	return filtered
 }
 
 // applyVegreferanseSelector applies the road continuity selection to results
@@ -770,6 +790,7 @@ func processFile(inputPath, outputPath string, apiClient *VegvesenetAPIV4, confi
 			apiClient,
 			config.Workers,
 			*config.CoordToVegref,
+			config.MaxDistance,
 		)
 
 		if err != nil {
