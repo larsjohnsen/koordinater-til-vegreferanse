@@ -49,7 +49,6 @@ type Config struct {
 	ClearCache   bool
 
 	// API settings
-	SearchRadius  int `validate:"min=1,max=1000"`
 	RateLimit     int `validate:"min=1,max=1000"`
 	RateLimitTime int `validate:"min=1,max=10000"`
 
@@ -226,7 +225,6 @@ func parseConfig() (Config, error) {
 	flag.BoolVar(&config.DisableCache, "no-cache", false, "Disable disk cache")
 	flag.StringVar(&config.CacheDir, "cache-dir", "cache/api_responses", "Directory for disk cache")
 	flag.BoolVar(&config.ClearCache, "clear-cache", false, "Clear existing cache before starting")
-	flag.IntVar(&config.SearchRadius, "radius", 10, "Search radius in meters")
 	flag.IntVar(&config.RateLimit, "rate-limit", 40, "Number of API calls allowed per time frame (NVDB default: 40)")
 	flag.IntVar(&config.RateLimitTime, "rate-time", 1000, "Rate limit time frame in milliseconds (NVDB default: 1000)")
 	flag.IntVar(&config.Workers, "workers", 5, "Number of concurrent workers")
@@ -928,7 +926,6 @@ func main() {
 	apiClient := NewVegvesenetAPIV4(
 		config.RateLimit,
 		time.Duration(config.RateLimitTime)*time.Millisecond,
-		config.SearchRadius,
 		cacheDirPath,
 	)
 

@@ -17,7 +17,7 @@ func TestGetCoordinatesFromVegreferanse(t *testing.T) {
 	}
 
 	// Create API client with reasonable rate limit
-	api := NewVegvesenetAPIV4(10, time.Second, 20, "")
+	api := NewVegvesenetAPIV4(10, time.Second, "")
 
 	// Test cases with known vegreferanses
 	testCases := []struct {
@@ -177,7 +177,7 @@ func TestVegvesenetAPIV4_Comprehensive(t *testing.T) {
 	// Basic functionality test
 	t.Run("BasicFunctionality", func(t *testing.T) {
 		// Create API client with small cache and rate limiter
-		api := NewVegvesenetAPIV4(10, time.Minute, 20, "")
+		api := NewVegvesenetAPIV4(10, time.Minute, "")
 
 		// Test coordinates that should return a valid road reference
 		x := 253671.97
@@ -220,7 +220,7 @@ func TestVegvesenetAPIV4_Comprehensive(t *testing.T) {
 	// Test handling of non-existent roads
 	t.Run("NonExistentRoad", func(t *testing.T) {
 		// Create API client
-		api := NewVegvesenetAPIV4(10, time.Minute, 10, "")
+		api := NewVegvesenetAPIV4(10, time.Minute, "")
 
 		// Test with coordinates far out at sea where there should be no roads
 		// Using coordinates in the North Sea
@@ -248,7 +248,7 @@ func TestVegvesenetAPIV4_Comprehensive(t *testing.T) {
 		}
 
 		// Create an instance of the v4 API client
-		apiClient := NewVegvesenetAPIV4(10, time.Second, 15, "")
+		apiClient := NewVegvesenetAPIV4(10, time.Second, "")
 
 		// Test the API response using the regular method
 		t.Run("TestAPIResponse", func(t *testing.T) {
@@ -318,7 +318,7 @@ func TestVegvesenetAPIV4_Comprehensive(t *testing.T) {
 			t.Skip("Skipping real API test in short mode")
 		}
 
-		api := NewVegvesenetAPIV4(10, time.Second, 30, "") // Use larger radius to find multiple matches
+		api := NewVegvesenetAPIV4(10, time.Second, "")
 
 		// We'll use coordinates for a location that might have multiple roads nearby
 		// These are example coordinates where roads might intersect
@@ -361,7 +361,7 @@ func TestIntegration_SelectorWithAPI(t *testing.T) {
 		t.Skip("Skipping integration test in short mode")
 	}
 
-	api := NewVegvesenetAPIV4(10, time.Second, 15, "")
+	api := NewVegvesenetAPIV4(10, time.Second, "")
 	selector := NewVegreferanseSelector(5)
 
 	// Simulate a journey along a road by using slightly different coordinates
@@ -416,7 +416,7 @@ func TestBidirectionalConversion(t *testing.T) {
 	}
 
 	// Create API client
-	api := NewVegvesenetAPIV4(10, time.Second, 20, "")
+	api := NewVegvesenetAPIV4(10, time.Second, "")
 
 	// Create selector for continuity (only for coord-to-vegref direction)
 	vegrefSelector := NewVegreferanseSelector(5)
@@ -503,7 +503,7 @@ func TestWKTFormatCorrespondsToUTM33(t *testing.T) {
 	}
 
 	// Create API client
-	api := NewVegvesenetAPIV4(10, time.Second, 20, "")
+	api := NewVegvesenetAPIV4(10, time.Second, "")
 
 	// Test known vegreferanse values
 	testCases := []struct {

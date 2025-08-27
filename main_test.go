@@ -32,8 +32,8 @@ func TestProcessFile(t *testing.T) {
 	outputPath := filepath.Join(tempDir, "test_output.txt")
 
 	// Create a properly initialized API client
-	// Parameters: rate limit (10 calls per minute), search radius (20 meters), no disk cache
-	apiClient := NewVegvesenetAPIV4(10, time.Minute, 20, "")
+	// Parameters: rate limit (10 calls per minute), no disk cache
+	apiClient := NewVegvesenetAPIV4(10, time.Minute, "")
 
 	// Process the file using the actual API client with 1 worker (sequential processing for testing)
 	err = processFile(inputPath, outputPath, apiClient, Config{
@@ -79,7 +79,7 @@ func TestProcessVegreferanseToCoordinates(t *testing.T) {
 	}
 
 	// Create API client
-	apiClient := NewVegvesenetAPIV4(10, time.Second, 20, "")
+	apiClient := NewVegvesenetAPIV4(10, time.Second, "")
 
 	// Test configuration
 	config := VegrefToCoordConfig{
@@ -160,7 +160,7 @@ func TestProcessFileVegrefToCoord(t *testing.T) {
 	outputPath := filepath.Join(tempDir, "vegref_output.txt")
 
 	// Create a properly initialized API client
-	apiClient := NewVegvesenetAPIV4(10, time.Second, 20, "")
+	apiClient := NewVegvesenetAPIV4(10, time.Second, "")
 
 	// Process the file using the actual API client
 	err = processFile(inputPath, outputPath, apiClient, Config{

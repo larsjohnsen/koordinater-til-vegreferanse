@@ -35,11 +35,10 @@ var clientSessionID string = uuid.NewString()
 
 // VegvesenetAPIV4 implements the VegreferanseProvider interface using the NVDB API v4
 type VegvesenetAPIV4 struct {
-	baseURL      string
-	apiClient    *http.Client
-	rateLimiter  *RateLimiter
-	diskCache    *VegreferanseDiskCache
-	searchRadius int // Search radius in meters
+	baseURL     string
+	apiClient   *http.Client
+	rateLimiter *RateLimiter
+	diskCache   *VegreferanseDiskCache
 }
 
 // V4PositionResponseItem represents a single item in the API response from the v4 API
@@ -92,7 +91,7 @@ type V4ErrorResponse struct {
 }
 
 // NewVegvesenetAPIV4 creates a new instance of the Vegvesenet API v4 client
-func NewVegvesenetAPIV4(callsLimit int, timeFrame time.Duration, searchRadius int, diskCachePath string) *VegvesenetAPIV4 {
+func NewVegvesenetAPIV4(callsLimit int, timeFrame time.Duration, diskCachePath string) *VegvesenetAPIV4 {
 	var diskCache *VegreferanseDiskCache
 	if diskCachePath != "" {
 		var err error
@@ -103,11 +102,10 @@ func NewVegvesenetAPIV4(callsLimit int, timeFrame time.Duration, searchRadius in
 	}
 
 	return &VegvesenetAPIV4{
-		baseURL:      "https://nvdbapiles.atlas.vegvesen.no",
-		apiClient:    &http.Client{Timeout: 10 * time.Second},
-		rateLimiter:  NewRateLimiter(callsLimit, timeFrame),
-		diskCache:    diskCache,
-		searchRadius: searchRadius,
+		baseURL:     "https://nvdbapiles.atlas.vegvesen.no",
+		apiClient:   &http.Client{Timeout: 10 * time.Second},
+		rateLimiter: NewRateLimiter(callsLimit, timeFrame),
+		diskCache:   diskCache,
 	}
 }
 
@@ -229,11 +227,10 @@ func (api *VegvesenetAPIV4) GetVegreferanseMatches(x, y float64) ([]Vegreferanse
 
 	// Add query parameters - using the UTM33 coordinates
 	q := req.URL.Query()
-	q.Add("nord", fmt.Sprintf("%.6f", y))                // Note: 'nord' is Y (northing)
-	q.Add("ost", fmt.Sprintf("%.6f", x))                 // Note: 'ost' is X (easting)
-	q.Add("srid", "5973")                                // UTM 33N EUREF89
-	q.Add("radius", fmt.Sprintf("%d", api.searchRadius)) // Search radius in meters
-	q.Add("maks_antall", "10")                           // Maximum number of results - now returning up to 10
+	q.Add("nord", fmt.Sprintf("%.6f", y)) // Note: 'nord' is Y (northing)
+	q.Add("ost", fmt.Sprintf("%.6f", x))  // Note: 'ost' is X (easting)
+	q.Add("srid", "5973")                 // UTM 33N EUREF89
+	q.Add("maks_antall", "10")            // Maximum number of results - now returning up to 10
 	req.URL.RawQuery = q.Encode()
 
 	// Execute request
